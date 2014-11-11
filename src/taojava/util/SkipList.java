@@ -1,6 +1,7 @@
 package taojava.util;
 
 import java.util.Iterator;
+import java.util.Random;
 
 /**
  * A randomized implementation of sorted lists.  
@@ -15,6 +16,12 @@ public class SkipList<T extends Comparable<T>>
   // | Fields |
   // +--------+
 
+  T data;
+  Node head;
+  int maxLevel;
+  double probability;
+  int size;
+
   // +------------------+------------------------------------------------
   // | Internal Classes |
   // +------------------+
@@ -22,7 +29,7 @@ public class SkipList<T extends Comparable<T>>
   /**
    * Nodes for skip lists.
    */
-  public class Node
+  public class Node<T>
   {
     // +--------+--------------------------------------------------------
     // | Fields |
@@ -32,15 +39,74 @@ public class SkipList<T extends Comparable<T>>
      * The value stored in the node.
      */
     T val;
+
+    /**
+     * The levels of the node.
+     */
+    Node<T>[] levels;
+
+    @SuppressWarnings("unchecked")
+    public Node(T value, int setLevel)
+    {
+      this.val = value;
+
+      levels = new Node[setLevel + 1];
+
+      for (int i = 0; i < setLevel; i++)
+        {
+          levels[i] = null;
+        }// for each level, set to null
+    }
   } // class Node
 
   // +--------------+----------------------------------------------------
   // | Constructors |
   // +--------------+
 
+  /**
+   * SkipList default constructor 
+   */
+  public SkipList()
+  {
+    this.probability = .5;
+    this.maxLevel = 20;
+    this.head = new Node(null, 20);
+    this.size = 0;
+  } //SkipList()
+
+  /**
+   * 
+   */
+  public SkipList(int level)
+  {
+    this.probability = .5;
+    this.maxLevel = level;
+    this.head = new Node(null, maxLevel);
+    this.size = 0;
+  }// SkipList(int level)
+
+  public SkipList(int level, double prob)
+  {
+    this.probability = prob;
+    this.maxLevel = level;
+    this.head = new Node(null, maxLevel);
+    this.size = 0;
+  }
+
   // +-------------------------+-----------------------------------------
   // | Internal Helper Methods |
   // +-------------------------+
+
+  public int randomLevel()
+  {
+    int newLevel = 1;
+    Random value = new Random();
+    while (value.nextDouble() < this.probability)
+      {
+        newLevel++;
+      }// while random is less than the probability
+    return Math.min(newLevel, this.maxLevel);
+  } // randomLevel()
 
   // +-----------------------+-------------------------------------------
   // | Methods from Iterable |
@@ -53,7 +119,7 @@ public class SkipList<T extends Comparable<T>>
    */
   public Iterator<T> iterator()
   {
-    // STUB
+    // S`
     return null;
   } // iterator()
 
@@ -68,9 +134,55 @@ public class SkipList<T extends Comparable<T>>
    * @post For all lav != val, if contains(lav) held before the call
    *   to add, contains(lav) continues to hold.
    */
+  @SuppressWarnings("unchecked")
   public void add(T val)
   {
-    // STUB
+    if (val == null)
+      {
+        return;
+      } // if value is null, don't add anything
+
+    Node current = this.head;
+    Node[] update = new Node[this.maxLevel];
+
+    for (int level = this.maxLevel; level >= 1; level--)
+      {
+        while ((current.levels[level] != null)
+               && val.compareTo((T) current.levels[level].val) > 0)
+          {
+            current = current.levels[level];
+          } // while
+        update[level] = current;
+      } // for
+
+    current = current.levels[1];
+
+    if (current != null && val.compareTo((T) current.val) == 0)
+      {
+        return;
+      } // if, the val already exists, then don't add anything
+    else
+      {
+        int newLevel = randomLevel();
+        if (newLevel > this.maxLevel)
+          {
+
+            for (int level = this.maxLevel + 1; level <= newLevel; level--)
+              {
+                update[level] = this.head;
+              } // for
+            this.maxLevel = newLevel;
+          }
+
+        current = new Node(val, newLevel);
+
+        for (int level = 1; level <= newLevel; level++)
+          {
+            current.levels[level] = update[level].levels[level];
+            update[level].levels[level] = current;
+          } // for
+      } // else
+    this.size++;
   } // add(T val)
 
   /**
@@ -115,9 +227,7 @@ public class SkipList<T extends Comparable<T>>
    */
   public int length()
   {
-    // STUB
-    return 0;
+    return this.size;
   } // length()
-
 
 } // class SkipList<T>
