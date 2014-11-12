@@ -97,6 +97,7 @@ public class SortedListTest
   public void simpleTest()
   {
     strings.add("hello");
+    //dump(strings);
     assertTrue(strings.contains("hello"));
     assertFalse(strings.contains("goodbye"));
   } // simpleTest()

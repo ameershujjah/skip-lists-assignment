@@ -43,19 +43,20 @@ public class SkipList<T extends Comparable<T>>
     /**
      * The levels of the node.
      */
-    Node<T>[] levels;
+    Node<T>[] next;
 
     @SuppressWarnings("unchecked")
     public Node(T value, int setLevel)
     {
       this.val = value;
 
-      levels = new Node[setLevel + 1];
+      next = new Node[setLevel + 1];
 
-      for (int i = 0; i < setLevel; i++)
+      for (int i = 0; i <= setLevel; i++)
         {
-          levels[i] = null;
+          next[i] = null;
         }// for each level, set to null
+       
     }
   } // class Node
 
@@ -117,12 +118,75 @@ public class SkipList<T extends Comparable<T>>
    * method) that iterates the values of the list from smallest to
    * largest.
    */
+
+  @SuppressWarnings("rawtypes")
+  public class SkipListIterator
+      implements Iterator
+  {
+    Node current;
+
+    public SkipListIterator()
+    {
+      current = head;
+    } // SkipListIterator()
+
+    public boolean hasNext()
+    {
+      return current.next[0] != null;
+    } // hasNext()
+
+    public T next()
+    {
+      current = current.next[0];
+      return (T) current.val;
+    } // next()
+
+    public void remove()
+    {
+      Node delete = current.next[0];
+      for (int i = 0; i <= maxLevel; i++)
+        {
+          if (current.next[i] != delete)
+            break;
+          delete.next[i] = current.next[i];
+        } //for
+
+      delete = null;
+      while ((maxLevel > 1) && (head.next[maxLevel] == null))
+        {
+          maxLevel--;
+        } // while
+      size--;
+    } // remove()
+
+  } // class SkipListIterator
+
   public Iterator<T> iterator()
   {
-    // S`
-    return null;
+    return new SkipListIterator();
   } // iterator()
 
+  /*
+  public Node search(T val)
+  {
+    Node current = this.head;
+    Node[] update = new Node[this.maxLevel];
+
+    for (int level = this.maxLevel; level >= 1; level--)
+      {
+        while ((current.next[level] != null)
+               && val.compareTo((T) current.next[level].val) > 0)
+          {
+            current = current.next[level];
+          } // while
+        update[level] = current;
+      } // for
+
+    current = current.next[1];
+    
+    return current;
+  }
+  */
   // +------------------------+------------------------------------------
   // | Methods from SimpleSet |
   // +------------------------+
@@ -143,19 +207,19 @@ public class SkipList<T extends Comparable<T>>
       } // if value is null, don't add anything
 
     Node current = this.head;
-    Node[] update = new Node[this.maxLevel];
+    Node[] update = new Node[this.maxLevel+1];
 
-    for (int level = this.maxLevel; level >= 1; level--)
+    for (int level = this.maxLevel; level >= 0; level--)
       {
-        while ((current.levels[level] != null)
-               && val.compareTo((T) current.levels[level].val) > 0)
+        while ((current.next[level] != null)
+               && val.compareTo((T) current.next[level].val) > 0)
           {
-            current = current.levels[level];
+            current = current.next[level];
           } // while
         update[level] = current;
       } // for
 
-    current = current.levels[1];
+    current = current.next[0];
 
     if (current != null && val.compareTo((T) current.val) == 0)
       {
@@ -172,14 +236,14 @@ public class SkipList<T extends Comparable<T>>
                 update[level] = this.head;
               } // for
             this.maxLevel = newLevel;
-          }
+          } // if
 
         current = new Node(val, newLevel);
 
-        for (int level = 1; level <= newLevel; level++)
+        for (int level = 0; level <= newLevel; level++)
           {
-            current.levels[level] = update[level].levels[level];
-            update[level].levels[level] = current;
+            current.next[level] = update[level].next[level];
+            update[level].next[level] = current;
           } // for
       } // else
     this.size++;
@@ -188,23 +252,85 @@ public class SkipList<T extends Comparable<T>>
   /**
    * Determine if the set contains a particular value.
    */
+  @SuppressWarnings("unchecked")
   public boolean contains(T val)
   {
-    // STUB
-    return false;
+    Node<T> current = this.head;
+
+    if (val == null)
+      {
+        return false;
+      }
+    else
+      {
+        for (int level = this.maxLevel; level >= 0; level--)
+          {
+            while ((current.next[level] != null)
+                   && val.compareTo((T) current.next[level].val) > 0)
+              {
+                current = current.next[level];
+              } // while
+
+          } // for
+        current = current.next[0];
+       // return val.equals(current.val);
+      } 
+    return val.equals(current.val);
+    
   } // contains(T)
 
   /**
    * Remove an element from the set.
-   *
+   *(
    * @post !contains(val)
    * @post For all lav != val, if contains(lav) held before the call
    *   to remove, contains(lav) continues to hold.
    */
   public void remove(T val)
   {
-    // STUB
-  } // remove(T)
+    if (val == null)
+      {
+        return;
+      } // if value is null, don't add anything
+
+    Node current = this.head;
+    Node[] update = new Node[this.maxLevel + 1];
+
+    for (int level = this.maxLevel; level >= 0; level--)
+      {
+        while ((current.next[level] != null)
+               && val.compareTo((T) current.next[level].val) > 0)
+          {
+            current = current.next[level];
+          } // while
+        update[level] = current;
+      } // for
+
+    current = current.next[0];
+
+    if (current != null && val.compareTo((T) current.val) == 0)
+      {
+        for (int i = 0; i <= this.maxLevel; i++)
+          {
+            if (update[i].next[i] != current)
+              break;
+            update[i].next[i] = current.next[i];
+
+          } //for
+        current = null;
+        while ((this.maxLevel > 1) && (this.head.next[this.maxLevel] == null))
+          {
+            this.maxLevel--;
+          } // while
+
+        this.size--;
+        return;
+      } // if, the val already exists, then don't add anything
+    else
+      {
+        return;
+      } // else
+  }// remove(T)
 
   // +--------------------------+----------------------------------------
   // | Methods from SemiIndexed |
@@ -212,14 +338,28 @@ public class SkipList<T extends Comparable<T>>
 
   /**
    * Get the element at index i.
-   *
    * @throws IndexOutOfBoundsException
    *   if the index is out of range (index < 0 || index >= length)
    */
   public T get(int i)
   {
-    // STUB
-    return null;
+    if ((i < 0) || (i > this.size))
+      {
+        return null;
+      }
+
+    Node current = this.head.next[1];
+    if (current == null)
+      {
+        return null;
+      } // if
+
+    for (int pos = 0; pos < i; pos++)
+      {
+        current = current.next[0];
+      } // for
+
+    return (T) current.val;
   } // get(int)
 
   /**
