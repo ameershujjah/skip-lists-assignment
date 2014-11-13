@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 import taojava.util.SortedLinkedList;
 
 /**
- * Quick and dirty analysis of SortedArrayLists.
+ * Quick and dirty analysis of SortedLinkedList.
  *
  * @author Samuel A. Rebelsky
  */

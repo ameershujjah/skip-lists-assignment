@@ -18,6 +18,8 @@ import taojava.util.SortedList;
  * ints.
  * 
  * @author Samuel A. Rebelsky
+ * @author Ameer Shujjah
+ * @author Yazan Kittaneh
  */
 public class SortedListTest
 {
@@ -56,7 +58,7 @@ public class SortedListTest
       } // for
     System.err.println("]");
   } // dump
-  
+
   /**
    * Determine if an iterator only returns values in non-decreasing
    * order.
@@ -183,7 +185,7 @@ public class SortedListTest
     ArrayList<String> operations = new ArrayList<String>();
     // Keep track of the values that are currently in the sorted list.
     ArrayList<Integer> vals = new ArrayList<Integer>();
-    
+
     // Add a bunch of values
     for (int i = 0; i < 1000; i++)
       {
@@ -210,7 +212,8 @@ public class SortedListTest
             vals.remove((Integer) rand);
             if (ints.contains(rand))
               {
-                System.err.println("After removing " + rand + " contains succeeds");
+                System.err.println("After removing " + rand
+                                   + " contains succeeds");
                 ok = false;
               } // if ints.contains(rand)
           } // if we remove
@@ -234,4 +237,142 @@ public class SortedListTest
           } // if (!ok)
       } // for i
   } // randomTest()
+
+  
+  /**
+   * Tests if repeated values are not added
+   */
+  @Test
+  public void simpleRepeat()
+  {
+    for (int i = 0; i < 5; i++)
+      ints.add(5);
+
+    //remove 5
+    ints.remove(5);
+    assertFalse(ints.contains(5));
+  } // simpleRepeat()
+
+  /**
+   * Tests if the remove method works
+   */
+  @Test
+  public void simpleRemove()
+  {
+    for (int i = 0; i < 10; i++)  //Add values
+      ints.add(i);
+    for (int i = 0; i < 10; i++) //Remove values
+      ints.remove(i);
+
+    assertFalse(ints.contains(5));
+  } // simpleRemove()
+
+  /**
+   * Checks if add() inserts values from a unordered pair
+   * in the correct order
+   */
+  @Test
+  public void orderedStrings()
+  {
+    String[] strs = new String[] { "aaac", "aaaab", "aaaaa", "aaaaad" };
+
+    // Add a bunch of values
+    for (int i = 0; i < 4; i++)
+      {
+        strings.add(strs[i]);
+      } // for
+    if (!inOrder(strings.iterator()))
+      {
+        System.err.println("inOrder() failed");
+        fail("String set is not in order");
+      } // if the elements are not in order.
+  } // orderedStrings()
+
+  /**
+   * Tests if two different permutations of the same array 
+   * result in the same order within the SkipList
+   */
+  @Test
+  public void stringPermutation()
+  {
+    //declarations
+    String[] per1 = new String[] { "d", "e", "f", "g", "a", "b", "c" };
+    String[] per2 = new String[] { "b", "d", "c", "e", "f", "a", "g" };
+    boolean ok = true;
+
+    // Add a bunch of values
+    for (int i = 0; i < 7; i++)
+      {
+        strings.add(per1[i]);
+      } // for
+    if (!inOrder(strings.iterator()))
+      {
+        System.err.println("inOrder() failed");
+        ok = false;
+      } // if the elements are not in order.
+    // empty SkipList
+    for (int i = 0; i < 7; i++)
+      {
+        strings.remove(per1[i]);
+      } // for
+
+    // Add values from per2
+    for (int i = 0; i < 7; i++)
+      {
+        strings.add(per2[i]);
+      } // for
+    if (!inOrder(strings.iterator()))
+      {
+        System.err.println("inOrder() failed");
+        ok = false;
+      } // if the elements are not in order.
+
+    if (!ok)
+      fail("Permutation test failure");
+  } // stringPermutation
+
+  /**
+   * Tests to see if remove works in succession
+   * (As appose to other implementations of lists which need to be
+   * every time iterated)
+   */
+  @Test
+  public void removeTwice()
+  {
+    String[] strs = new String[] { "aaa", "bbb", "ccc", "ddd", "eee" };
+
+    for (int i = 0; i < 5; i++)
+      {
+        strings.add(strs[i]);
+      } // for
+
+    strings.remove("ccc");
+    strings.remove("ddd");
+    if (!inOrder(strings.iterator()))
+      {
+        System.err.println("inOrder() failed");
+        fail("Removing consecutive elements does not work");
+      } // if the elements are not in order.
+  } // removeTwice()
+
+  /**
+   * Checks if a deleted node is actually deleted
+   */
+  @Test
+  public void missingNodeTest()
+  {
+    for (int i = 0; i < 5; i++)
+      ints.add(i);
+    // remove an element and check 
+    ints.remove(3);
+    System.out.println("get : " + ints.get(3));
+
+    if (ints.get(3) != 4)
+      fail("Node is still present; fail");
+    // remove another element and check 
+    ints.remove(4);
+    assertFalse(ints.contains(4));
+    if (ints.get(2) == null)
+      fail("Node is still present; fail");
+  } // missingNodeTest()
 } // class SortedListTest
